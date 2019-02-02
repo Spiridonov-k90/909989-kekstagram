@@ -52,6 +52,7 @@ var getAllPhoto = function (content) {
     return Photos;
 };
 var allPhoto = getAllPhoto(photoInfo);
+console.log(allPhoto)
 
 /*ПУНКТ №2,3 - Создание DOM-элемента (самовызывающаяся функция)*/
 var getDomElement = function () {
@@ -79,15 +80,15 @@ getDomElement();
 /*ПУНКТ №4 - Показал элемент big-picture первого элемента*/
 var pictureBig = document.querySelector('.big-picture');
 pictureBig.classList.remove('hidden');
-/*Показал первую picture*/
-var pictureBigImg = document.querySelector('.big-picture__img');
-pictureBigImg.children[0].src = allPhoto[0].url;
-/*Показал количество likes*/
-var pictureLikeCount = document.querySelector('.likes-count');
-pictureLikeCount.textContent = allPhoto[0].likes;
-/*Показал количество comments*/
-var pictureCommentCount = document.querySelector('.comments-count');
-pictureCommentCount.textContent = allPhoto[0].comments.length;
+///*Показал первую picture*/
+//var pictureBigImg = document.querySelector('.big-picture__img');
+//pictureBigImg.children[0].src = allPhoto[0].url;
+///*Показал количество likes*/
+//var pictureLikeCount = document.querySelector('.likes-count');
+//pictureLikeCount.textContent = allPhoto[0].likes;
+///*Показал количество comments*/
+//var pictureCommentCount = document.querySelector('.comments-count');
+//pictureCommentCount.textContent = allPhoto[0].comments.length;
 
 var getSocialComments = function () {
     'use strict';
@@ -133,3 +134,97 @@ var socialCommentCount = document.querySelector('.social__comment-count');
 var commentLoader = document.querySelector('.comments-loader');
 socialCommentCount.classList.add('visually-hidden');
 commentLoader.classList.add('visually-hidden');
+
+
+
+
+//module4-task1
+
+var ESC_CODE = 27; /*кнопка Esc*/
+
+var tagBody = document.querySelector('body');
+var bigPictureCancel = document.querySelector('.big-picture__cancel');
+
+/*Закрытие большого изображения при помощи кнопки "Х"*/
+bigPictureCancel.addEventListener('click', function (){
+    'use strict';
+    pictureBig.classList.add('hidden');
+    tagBody.classList.remove('modal-open');    
+});
+
+/*Закрытие большого изображения и форма редактирования изображения при помощи "ESC"*/
+document.addEventListener('keydown', function (evt){
+    'use strict';
+    if(evt.keyCode === ESC_CODE){
+        pictureBig.classList.add('hidden');
+        tagBody.classList.remove('modal-open');
+        imgUpload.classList.add('hidden');
+    }
+});
+
+/*Обработчик для отображения: по клику на миниатюру отображается большая картинка с изображением из миниатюры*/
+var pictureSmall = document.querySelectorAll('.picture__img');
+var pictureBigImg = document.querySelector('.big-picture__img').children[0];
+
+var onPictureSmallClick = function (preview, picture){
+    'use strict';
+    preview.addEventListener('click', function (evt){
+        evt.preventDefault();
+        pictureBigImg.src = picture;
+        pictureBig.classList.remove('hidden');
+        tagBody.classList.add('modal-open');
+    });
+};
+for (var i = 0; i < pictureSmall.length; i++){
+    onPictureSmallClick(pictureSmall[i], allPhoto[i].url);
+};
+
+/*Событие: отображение формы редактирования*/
+var uploadFile = document.querySelector('#upload-file');
+var imgUpload = document.querySelector('.img-upload__overlay');
+
+uploadFile.addEventListener('change', function(){
+    'use strict';
+    imgUpload.classList.remove('hidden');
+});
+
+/*Событие: клик на кнопку закрытия формы редактирования*/
+var uploadFileCancel = document.querySelector('#upload-cancel');
+
+uploadFileCancel.addEventListener('click', function (){
+    'use strict';
+    imgUpload.classList.add('hidden');
+    tagBody.classList.remove('modal-open');
+//    if(uploadFile){
+//        uploadFil.reset();
+//    };
+});
+
+/*Массив со стилями окна редактирования*/
+var EFFECTS = [
+    'effects__preview--none',
+    'effects__preview--chrome',
+    'effects__preview--sepia',
+    'effects__preview--marvin',
+    'effects__preview--phobos',
+    'effects__preview--heat'
+];
+
+/*Обработчик: Наложение эффекта на изображение*/
+var effectsList = document.querySelectorAll('.effects__radio');
+var uploadPreviewImg = document.querySelector('.img-upload__preview').children[0];
+var myClass = uploadPreviewImg.classList;
+
+var onPictureEffectsClick = function (icon, effect, listEffects) {
+    icon.addEventListener('click', function() {
+        for (var j = 0; j < listEffects.length; j++) {
+            if (myClass.contains(listEffects[j])) {
+                myClass.remove(listEffects[j]);
+                };
+        };
+        uploadPreviewImg.classList.add(effect);
+    });
+};
+for (var i = 0; i < effectsList.length; i++) {
+    onPictureEffectsClick(effectsList[i], EFFECTS[i], EFFECTS);
+};
