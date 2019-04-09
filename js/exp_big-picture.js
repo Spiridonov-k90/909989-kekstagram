@@ -35,6 +35,7 @@
         pictureBig.classList.remove('hidden');
         tagBody.classList.add('modal-open');
         
+        /*комментарии фотографии фотографии*/
         var addCommentsUserstoBigPhoto = function () {
     
             var getElement = function (tagName, className, text) {
@@ -49,7 +50,7 @@
             var userItem, userPhoto, userText;
 
             for (var i = 0; i < window.exp_gallery.allPhoto.length; i++) {
-                if (target.src.indexOf(window.exp_gallery.allPhoto[i].url) > 0) {
+                if (target.src.indexOf(window.exp_gallery.allPhoto[i].url) > -1) {
                     for (var j = 0; j < window.exp_gallery.allPhoto[i].comments.length; j++) {
                         userItem = getElement('li', 'social__comment');
                         userPhoto = getElement('img', 'social__picture');
@@ -66,6 +67,34 @@
             };
         };
         addCommentsUserstoBigPhoto();
+        
+        /*описание фотографии*/
+        var addDescriptionBifPhoto = function () {
+            var socialHeader = document.querySelector('.social__header');
+            var descriptionElement = socialHeader.querySelector('.social__caption');
+            descriptionElement.textContent = '';
+            
+            for (var i = 0; i < window.exp_gallery.allPhoto.length; i++) {
+                if (target.src.indexOf(window.exp_gallery.allPhoto[i].url) > -1) {
+                    descriptionElement.textContent = window.exp_gallery.allPhoto[i].description;
+                };
+            };
+        };
+        addDescriptionBifPhoto();
+        
+        /*количество лайков*/
+        var addLikesNumber = function () {
+            var socialHeader = document.querySelector('.social__header');
+            var likesNumber = socialHeader.querySelector('.likes-count');
+            likesNumber.textContent = '';
+            
+            for (var i = 0; i < window.exp_gallery.allPhoto.length; i++) {
+                if (target.src.indexOf(window.exp_gallery.allPhoto[i].url) > -1) {
+                    likesNumber.textContent = window.exp_gallery.allPhoto[i].likes;
+                };
+            };
+        };
+        addLikesNumber();
     });
     
     /*Закрытие большого изображения при помощи кнопки "Х"*/
