@@ -1,88 +1,151 @@
 'use strict';
 (function () {
+    var AVATAR_SIZE = '35';
+    var MAX_SLIDER_VALUE = 100;
+    var FIRST_NUMBER_ARRAY = 0;
+    var AMOUNT_PHOTOS = 10;
+    var DEBOUNCE_INTERVAL = 500;
     
-    var NAMES = ['Олька', 'Александра', 'Евгений', 'Борис', 'Коля', 'Ирина'];
-
-    var USERS_COMMENTS = [
-        'Всё отлично!',
-        'В целом всё неплохо. Но не всё.',
-        'Когда вы делаете фотографию, хорошо бы убирать палец из кадра. В конце концов это просто непрофессионально.',
-        'Моя бабушка случайно чихнула с фотоаппаратом в руках и у неё получилась фотография лучше.',
-        'Я поскользнулся на банановой кожуре и уронил фотоаппарат на кота и у меня получилась фотография лучше.',
-        'Лица у людей на фотке перекошены, как будто их избивают. Как можно было поймать такой неудачный момент?!'
-    ];
+    var pictures = document.querySelector('.pictures');
+    var template = document.querySelector('#picture').content
     
-    var userComment = function (name, comment) {
-        var commentsItem = [];
-        var randomAvatar;
+    var photosList;
+    
+    /*cоздание создание фотографий*/
+    var renderPhoto = function (generatedPhoto, number) {
+        var photoElement = template.cloneNode(true);
+        var pictures = document.querySelector('.picture');    
+//        picture.dataset.id = number;
 
-        for (var i = 0; i < name.length; i++) {
-            randomAvatar = Math.ceil(Math.random() * comment.length);
-            commentsItem[i] = {
-                avatar: 'img/avatar-' + randomAvatar + '.svg',
-                message: comment[Math.floor(Math.random() * comment.length)],
-                name: name[i]
-            };
-        };
-        return commentsItem;
+        photoElement.querySelector('.picture__img').src = generatedPhoto.url;
+        photoElement.querySelector('.picture__comments').textContent = generatedPhoto.comments.length;
+        photoElement.querySelector('.picture__likes').textContent = generatedPhoto.likes;
+
+        return photoElement;
     };
-    var allUserComment = userComment(NAMES, USERS_COMMENTS);
-    
-    /*Массив фотографий*/
-    var photoInfo = {
-        totalPhoto: 25,
-        minLikes: 15,
-        maxLikes: 200,
-        maxComments: 2
-    };
-    
-    var getAllPhoto = function () {
-        var photos = [];
-        var totalLikes; 
-        var commentsList = [];
-        var indexComment;
 
-        for (var i = 0; i < photoInfo.totalPhoto; i++) {
-            totalLikes = Math.floor(Math.random() * (photoInfo.maxLikes - photoInfo.minLikes + 1)) + photoInfo.minLikes;
-            var commentsList = [];
-
-            for (var j = 0; j < photoInfo.maxComments; j++) {
-                indexComment = Math.floor(Math.random() * allUserComment.length);
-                commentsList.push(allUserComment[indexComment]);
-            };
-            photos[i] = {
-                url: 'photos/' + (i + 1) + '.jpg',
-                likes: totalLikes,
-                comments: commentsList
-            };
-        };
-        return photos;
-    };
-    var allPhoto = getAllPhoto();
-    
-    /*Создание DOM-элемента*/
-    var getPhotoBlock = function () {
-        var pictures = document.querySelector('.pictures');
+    /*функция удачной загрузки*/
+    var onSaccesHandler = function (photos) {
         var fragment = document.createDocumentFragment();
-        var template = document.querySelector('#picture').content.querySelector('a');
-        var element, img, pictureInfo, pictureComments, pictureLikes, PhotoBlock;
+        
+        window.exp_gallery.allPhoto = photos;
+        
+        photosList = photos;
+        
+        photos.forEach(function (photo, j) {        
+          fragment.appendChild(renderPhoto(photo, j));
+        });
 
-        for (var i = 0; i < allPhoto.length; i++) {
-            element = template.cloneNode(true);
-            img = element.querySelector('img');
-            img.src = allPhoto[i].url;
-            pictureInfo = element.querySelector('.picture__info');
-            pictureComments = pictureInfo.children[0];
-            pictureComments.textContent = allPhoto[i].comments.length;
-            pictureLikes = pictureInfo.children[1];
-            pictureLikes.textContent = allPhoto[i].likes;
-            fragment = pictures.appendChild(element);
-        };
-        PhotoBlock = fragment;
-        return PhotoBlock;
+        pictures.appendChild(fragment);
+        imgFiltersElement.classList.remove('img-filters--inactive');
     };
-    getPhotoBlock();
+    
+    /*функция вывода ошибки*/
+    var onErrorHandler = function (errorMessage) {
+        var nodeElement = document.createElement('div');
+        nodeElement.style = 'z-index: 100; margin: 100px auto; text-align: center; min-height: 45px; background-color: #3c3614;';
+        nodeElement.style.position = 'absolute';
+        nodeElement.style.left = 0;
+        nodeElement.style.right = 0;
+        nodeElement.style.fontSize = '40px';
+        nodeElement.style.lineHeight = '40px';
 
+        nodeElement.textContent = errorMessage;
+        document.body.insertAdjacentElement('afterbegin', nodeElement);
+    };
+    
+    /*запрос с сервера информации*/
+    window.exp_backend.loadData(onSaccesHandler, onErrorHandler);
+    
+    /*работа с выборками: популярные, новые, обсуждаемые*/
+    var imgFiltersElement = document.querySelector('.img-filters');
+    var uploadFormElement = document.querySelector('.img-upload');
+    
+    var buttonPopularElement = imgFiltersElement.querySelector('#filter-popular');  
+    var buttonNewElement = imgFiltersElement.querySelector('#filter-new');
+    var buttonDiscussedElement = imgFiltersElement.querySelector('#filter-discussed');
+    
+    /*активная кнопка - отражает выбранный фильтр*/
+    var buttonActiveElement = buttonPopularElement;
+    
+    var createPosts = function (arrayName) {
+        pictures.innerHTML = '';
+
+        var fragment = document.createDocumentFragment();
+        arrayName.forEach(function (element, j) {
+          fragment.appendChild(renderPhoto(element, j));
+        });
+
+        pictures.appendChild(uploadFormElement);
+        pictures.appendChild(fragment);
+    };
+    
+    var getRandomNewArray = function (arrayName) {
+        var randomNewArray = arrayName
+        .sort(function () {
+          return 0.5 - Math.random();
+        })
+        .slice(FIRST_NUMBER_ARRAY, AMOUNT_PHOTOS);
+
+        window.exp_gallery.allPhoto = randomNewArray;
+        return randomNewArray;
+    };
+    
+    var getDiscussedArray = function (arrayName) {
+        var discussedArray = arrayName.sort(function (first, second) {
+        return second.comments.length - first.comments.length;
+        });
+
+        window.exp_gallery.allPhoto = discussedArray;
+        return discussedArray;
+    };
+    
+    var debounce = function (cb) {
+    var lastTimeout;
+
+    return function () {
+        var args = arguments;
+
+        if (lastTimeout) {
+            window.clearTimeout(lastTimeout);
+        };
+
+        lastTimeout = window.setTimeout(function () {
+            cb.apply(cb, args);
+        }, DEBOUNCE_INTERVAL);
+        };
+    };
+    
+    var activationCommentsList = function (target) {
+        buttonActiveElement.classList.remove('img-filters__button--active');
+        buttonActiveElement = target;
+        buttonActiveElement.classList.add('img-filters__button--active');
+    };
+    
+    var debouncedCreatePosts = debounce(createPosts);
+    
+    imgFiltersElement.addEventListener('click', function (evt) {
+        var target = evt.target;
+
+        var popularArray = photosList.slice(0);
+        window.exp_gallery.allPhoto = popularArray;
+
+        if (target === 'BUTTON') {
+          return;
+        }
+
+        if (target === buttonPopularElement) {
+          activationCommentsList(target);
+          debouncedCreatePosts(popularArray);
+        } else if (target === buttonNewElement) {
+          activationCommentsList(target);
+          debouncedCreatePosts(getRandomNewArray(popularArray));
+        } else if (target === buttonDiscussedElement) {
+          activationCommentsList(target);
+          debouncedCreatePosts(getDiscussedArray(popularArray));
+        }
+      });
+    
     /*Счетчик комментариев скрыт*/
     var socialComments = document.querySelector('.social__comments');
     var socialCommentCount = document.querySelector('.social__comment-count');
@@ -91,7 +154,7 @@
     commentLoader.classList.add('visually-hidden');
     
     window.exp_gallery = {
-        allPhoto: allPhoto,
+        allPhoto: [],
         socialComments: socialComments
     };
 }());
